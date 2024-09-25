@@ -1,0 +1,27 @@
+EXECUTE PIPELINE WITHYAML (
+source:
+  type: mysql
+  name: MySQL Source
+  hostname: bigdata.polardb.db.qmai.cn
+  port: 3306
+  username: mysql_dms
+  password: gfsj#frwHG
+  tables: dataassetpro.\.*
+  jdbc.properties.useSSL: false
+  jdbc.properties.useUnicode: true
+  jdbc.properties.characterEncoding: UTF-8
+  scan.startup.mode: latest-offset
+  scan.newly-added.table.enabled: true
+
+sink:
+  type: paimon
+  name: Paimon Sink
+  catalog.properties.metastore: hive
+  catalog.properties.uri: thrift://cdhpro001:9083
+  catalog.properties.warehouse: oss://qm-bigdata-hdfs.cn-shanghai.oss-dls.aliyuncs.com/user/paimon/warehousedev/
+  table.properties.full-compaction.delta-commits: 5
+
+pipeline:
+  name: MySQL to paimon Pipeline
+  parallelism: 1
+)

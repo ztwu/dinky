@@ -44,7 +44,7 @@ public class FeiShuAlert extends AbstractAlert {
         try {
             String built = buildContent(sender.buildTemplateParams(title, content));
             logger.info("Send FeiShu alert title: {}", title);
-            return sender.send(built);
+            return sender.send(title, built);
         } catch (TemplateException | IOException e) {
             logger.error("{}'message send error, Reason:{}", getType(), e.getMessage());
             throw new RuntimeException(e);

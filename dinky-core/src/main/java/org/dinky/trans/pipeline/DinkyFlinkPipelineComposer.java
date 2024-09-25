@@ -19,6 +19,7 @@
 
 package org.dinky.trans.pipeline;
 
+import org.apache.flink.cdc.common.pipeline.SchemaChangeBehavior;
 import org.dinky.executor.Executor;
 
 import org.apache.flink.cdc.common.configuration.Configuration;
@@ -74,62 +75,72 @@ public class DinkyFlinkPipelineComposer implements PipelineComposer {
         int parallelism = pipelineDef.getConfig().get(PipelineOptions.PIPELINE_PARALLELISM);
         env.getConfig().setParallelism(parallelism);
 
+        SchemaChangeBehavior schemaChangeBehavior =
+                pipelineDef.getConfig().get(PipelineOptions.PIPELINE_SCHEMA_CHANGE_BEHAVIOR);
+
         // Build Source Operator
         DataSourceTranslator sourceTranslator = new DataSourceTranslator();
-        DataStream<Event> stream = sourceTranslator.translate(pipelineDef.getSource(), env, pipelineDef.getConfig());
+        DataStream<Event> stream =
+                sourceTranslator.translate(
+                        pipelineDef.getSource(), env, pipelineDef.getConfig(), parallelism);
 
-        // Build TransformSchemaOperator for processing Schema Event
+        // Build PreTransformOperator for processing Schema Event
         TransformTranslator transformTranslator = new TransformTranslator();
-        stream = transformTranslator.translateSchema(stream, pipelineDef.getTransforms());
+        stream =
+                transformTranslator.translatePreTransform(
+                        stream, pipelineDef.getTransforms(), pipelineDef.getUdfs());
 
         // Schema operator
-        SchemaOperatorTranslator schemaOperatorTranslator = new SchemaOperatorTranslator(
-                pipelineDef.getConfig().get(PipelineOptions.PIPELINE_SCHEMA_CHANGE_BEHAVIOR),
-                pipelineDef.getConfig().get(PipelineOptions.PIPELINE_SCHEMA_OPERATOR_UID),
-                pipelineDef.getConfig().get(PipelineOptions.PIPELINE_SCHEMA_OPERATOR_RPC_TIMEOUT));
+        SchemaOperatorTranslator schemaOperatorTranslator =
+                new SchemaOperatorTranslator(
+                        schemaChangeBehavior,
+                        pipelineDef.getConfig().get(PipelineOptions.PIPELINE_SCHEMA_OPERATOR_UID),
+                        pipelineDef
+                                .getConfig()
+                                .get(PipelineOptions.PIPELINE_SCHEMA_OPERATOR_RPC_TIMEOUT));
         OperatorIDGenerator schemaOperatorIDGenerator =
                 new OperatorIDGenerator(schemaOperatorTranslator.getSchemaOperatorUid());
 
-        // Build TransformDataOperator for processing Data Event
-        stream = transformTranslator.translateData(
-                stream,
-                pipelineDef.getTransforms(),
-                schemaOperatorIDGenerator.generate(),
-                pipelineDef.getConfig().get(PipelineOptions.PIPELINE_LOCAL_TIME_ZONE));
+        // Build PostTransformOperator for processing Data Event
+        stream =
+                transformTranslator.translatePostTransform(
+                        stream,
+                        pipelineDef.getTransforms(),
+                        pipelineDef.getConfig().get(PipelineOptions.PIPELINE_LOCAL_TIME_ZONE),
+                        pipelineDef.getUdfs());
 
         // Build DataSink in advance as schema operator requires MetadataApplier
-        DataSink dataSink = createDataSink(pipelineDef.getSink(), pipelineDef.getConfig());
+        DataSinkTranslator sinkTranslator = new DataSinkTranslator();
+        DataSink dataSink =
+                sinkTranslator.createDataSink(pipelineDef.getSink(), pipelineDef.getConfig(), env);
 
-        stream = schemaOperatorTranslator.translate(
-                stream, parallelism, dataSink.getMetadataApplier(), pipelineDef.getRoute());
+        stream =
+                schemaOperatorTranslator.translate(
+                        stream,
+                        parallelism,
+                        dataSink.getMetadataApplier()
+                                .setAcceptedSchemaEvolutionTypes(
+                                        pipelineDef.getSink().getIncludedSchemaEvolutionTypes()),
+                        pipelineDef.getRoute());
 
         // Build Partitioner used to shuffle Event
         PartitioningTranslator partitioningTranslator = new PartitioningTranslator();
-        stream = partitioningTranslator.translate(
-                stream, parallelism, parallelism, schemaOperatorIDGenerator.generate());
+        stream =
+                partitioningTranslator.translate(
+                        stream,
+                        parallelism,
+                        parallelism,
+                        schemaOperatorIDGenerator.generate(),
+                        dataSink.getDataChangeEventHashFunctionProvider(parallelism));
 
         // Build Sink Operator
-        DataSinkTranslator sinkTranslator = new DataSinkTranslator();
-        sinkTranslator.translate(pipelineDef.getSink(), stream, dataSink, schemaOperatorIDGenerator.generate());
+        sinkTranslator.translate(
+                pipelineDef.getSink(), stream, dataSink, schemaOperatorIDGenerator.generate());
 
         // Add framework JARs
         addFrameworkJars();
 
         return new DinkyFlinkPipelineExecution(env, pipelineDef.getConfig().get(PipelineOptions.PIPELINE_NAME));
-    }
-
-    private DataSink createDataSink(SinkDef sinkDef, Configuration pipelineConfig) {
-        // Search the data sink factory
-        DataSinkFactory sinkFactory =
-                FactoryDiscoveryUtils.getFactoryByIdentifier(sinkDef.getType(), DataSinkFactory.class);
-
-        // Include sink connector JAR
-        FactoryDiscoveryUtils.getJarPathByIdentifier(sinkDef.getType(), DataSinkFactory.class)
-                .ifPresent(jar -> FlinkEnvironmentUtils.addJar(env, jar));
-
-        // Create data sink
-        return sinkFactory.createDataSink(new FactoryHelper.DefaultContext(
-                sinkDef.getConfig(), pipelineConfig, Thread.currentThread().getContextClassLoader()));
     }
 
     private void addFrameworkJars() {

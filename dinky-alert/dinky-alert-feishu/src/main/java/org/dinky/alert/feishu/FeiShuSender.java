@@ -96,9 +96,15 @@ public final class FeiShuSender {
      * @param content
      * @return AlertResult
      */
-    public AlertResult send(String content) {
+    public AlertResult send(String title, String content) {
         try {
-            return checkSendMsgResult(HttpUtils.post(feiShuParams.getWebhook(), content, proxyConfig));
+            StringBuffer sb = new StringBuffer();
+            sb.append("- **报错类型 :** "+title).append("\n");
+            String[] split = content.split("\\\\n");
+            for (String item : split) {
+                sb.append(item).append("\n");
+            }
+            return checkSendMsgResult(HttpUtils.post(feiShuParams.getWebhook(), sb.toString(), proxyConfig));
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("send fei shu alert msg  exception : {}", e.getMessage(), e);

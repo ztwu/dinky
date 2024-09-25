@@ -1,0 +1,16 @@
+use dataassetpro;
+
+set table.exec.sink.upsert-materialize=None;
+
+EXECUTE CDCSOURCE paimon_demo WITH (
+  'connector' = 'mysql-cdc',
+  ${bigdata-polardb}
+  'checkpoint' = '30000',
+  'scan.startup.mode' = 'latest-offset',
+  'parallelism' = '1',
+  'table-name' = 'dataassetpro\..*',
+  'sink.connector' = 'paimon',
+  'sink.path' = 'oss://qm-bigdata-hdfs.cn-shanghai.oss-dls.aliyuncs.com/user/paimon/warehouse/#{schemaName}.db/#{tableName}',
+  'sink.auto-create' = 'true',
+  'sink.table.properties.full-compaction.delta-commits' = '5'
+);
