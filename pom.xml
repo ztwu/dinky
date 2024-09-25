@@ -1021,7 +1021,7 @@
                 </property>
             </activation>
             <properties>
-                <scope.runtime>complie</scope.runtime>
+                <scope.runtime>provided</scope.runtime>
             </properties>
         </profile>
 
