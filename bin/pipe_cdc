@@ -4,8 +4,8 @@ source:
   name: MySQL Source
   hostname: bigdata.polardb.db.qmai.cn
   port: 3306
-  username: mysql_dms
-  password: gfsj#frwHG
+  ${polardb-pipe-username}
+  ${polardb-pipe-password}
   tables: dataassetpro.\.*
   jdbc.properties.useSSL: false
   jdbc.properties.useUnicode: true

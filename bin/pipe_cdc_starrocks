@@ -4,8 +4,8 @@ source:
   name: MySQL Source
   hostname: bigdata.polardb.db.qmai.cn
   port: 3306
-  username: mysql_dms
-  password: gfsj#frwHG
+  ${polardb-pipe-username}
+  ${polardb-pipe-password}
   tables: dinkypro.dinky_sys_operate_log
   jdbc.properties.useSSL: false
   jdbc.properties.useUnicode: true
@@ -18,8 +18,8 @@ sink:
   name: StarRocks Sink
   jdbc-url: jdbc:mysql://user02.doris.db.qmai.cn:9030
   load-url: user02.doris.db.qmai.cn:8030
-  username: dophil_export_star
-  password: ypeYywzz
+  username: *
+  password: *
 
 pipeline:
   name: MySQL to StarRocks Pipeline
