@@ -1,0 +1,8 @@
+insert into org_shops_print
+SELECT id, group_id, brand_id, org_id, name, code, notice, contact_name, manager_phone, contact_tel, contact_phone, id_card, out_hotline, open_time, province_id, city_id, district_id, lng, lat, address, full_address, is_eat, is_takeout, is_appoint, is_applet_show, is_multi_booths, is_multi_floor, share_content, share_image, per_price, applet_code_url, sap_code, expired_at, is_queue_food, queue_food_expired_at, created_at, updated_at, deleted_at, is_deleted, pinyin, food_license, manager_status, business_license, comp_name, has_districts, has_story, qmai_assist_expired_at, self_screen_expired_at, is_test, is_pay_bill, is_group_eat, is_group_takeout, pos_dy_poi, cooper_type, is_clear, currency, country, country_code, busi_qual_code, xhs_poi, team_id, `type`, short_name, logo, topping_at
+from orgcenterpro.`org_shops` /*+
+OPTIONS(
+'scan.startup.mode'='latest-offset',
+'properties.group.id'='test_ztwu20240910',
+'format'='maxwell-json'
+    ) */;
