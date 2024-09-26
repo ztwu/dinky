@@ -14,3 +14,12 @@ EXECUTE CDCSOURCE paimon_demo WITH (
   'sink.auto-create' = 'true',
   'sink.table.properties.full-compaction.delta-commits' = '5'
 );
+
+create catalog hive_catalog with(
+    'type' = 'paimon',
+    'metastore' = 'hive',
+    'uri' = 'thrift://cdhpro001:9083',
+    'warehouse' = 'oss://qm-bigdata-hdfs.cn-shanghai.oss-dls.aliyuncs.com/user/paimon/warehouse/'
+);
+
+use catalog hive_catalog;

@@ -1,0 +1,21 @@
+use dinkypro_starrocks_new;
+
+EXECUTE CDCSOURCE cdc-starrocks WITH (
+  'connector' = 'mysql-cdc',
+  ${bigdata-polardb}
+  'checkpoint' = '30000',
+  'scan.startup.mode' = 'latest-offset',
+  'parallelism' = '1',
+  'table-name' = 'dinkypro\..*',
+  'sink.connector' = 'starrocks',
+  ${user02-doris}
+  'sink.sink.db' = 'dinkypro',
+  'sink.table.lower' = 'true',
+  'sink.database-name' = 'dinkypro',
+  'sink.table-name' = '#{tableName}',
+  'sink.sink.properties.format' = 'json',
+  'sink.sink.properties.strip_outer_array' = 'true',
+  'sink.sink.max-retries' = '10',
+  'sink.sink.buffer-flush.interval-ms' = '18000',
+  'sink.sink.parallelism' = '1'
+)

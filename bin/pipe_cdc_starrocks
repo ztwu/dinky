@@ -1,0 +1,27 @@
+EXECUTE PIPELINE WITHYAML (
+source:
+  type: mysql
+  name: MySQL Source
+  hostname: bigdata.polardb.db.qmai.cn
+  port: 3306
+  username: mysql_dms
+  password: gfsj#frwHG
+  tables: dinkypro.dinky_sys_operate_log
+  jdbc.properties.useSSL: false
+  jdbc.properties.useUnicode: true
+  jdbc.properties.characterEncoding: UTF-8
+  scan.startup.mode: latest-offset
+  scan.newly-added.table.enabled: true
+
+sink:
+  type: starrocks
+  name: StarRocks Sink
+  jdbc-url: jdbc:mysql://user02.doris.db.qmai.cn:9030
+  load-url: user02.doris.db.qmai.cn:8030
+  username: dophil_export_star
+  password: ypeYywzz
+
+pipeline:
+  name: MySQL to StarRocks Pipeline
+  parallelism: 1
+)
