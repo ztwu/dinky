@@ -40,7 +40,6 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMap
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -88,13 +87,11 @@ public class YamlTextPipelineDefinitionParser {
 
     private final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-    public PipelineDef parse(String pipelineDefText, Configuration globalPipelineConfig)
-            throws Exception {
+    public PipelineDef parse(String pipelineDefText, Configuration globalPipelineConfig) throws Exception {
         return parse(mapper.readTree(pipelineDefText), globalPipelineConfig);
     }
 
-    private PipelineDef parse(JsonNode pipelineDefJsonNode, Configuration globalPipelineConfig)
-            throws Exception {
+    private PipelineDef parse(JsonNode pipelineDefJsonNode, Configuration globalPipelineConfig) throws Exception {
 
         // UDFs are optional. We parse UDF first and remove it from the pipelineDefJsonNode since
         // it's not of plain data types and must be removed before calling toPipelineConfig.
@@ -105,33 +102,26 @@ public class YamlTextPipelineDefinitionParser {
         // Pipeline configs are optional
         Configuration userPipelineConfig = toPipelineConfig(pipelineDefJsonNode.get(PIPELINE_KEY));
 
-        SchemaChangeBehavior schemaChangeBehavior =
-                userPipelineConfig.get(PIPELINE_SCHEMA_CHANGE_BEHAVIOR);
+        SchemaChangeBehavior schemaChangeBehavior = userPipelineConfig.get(PIPELINE_SCHEMA_CHANGE_BEHAVIOR);
 
         // Source is required
-        SourceDef sourceDef =
-                toSourceDef(
-                        checkNotNull(
-                                pipelineDefJsonNode.get(SOURCE_KEY),
-                                "Missing required field \"%s\" in pipeline definition",
-                                SOURCE_KEY));
+        SourceDef sourceDef = toSourceDef(checkNotNull(
+                pipelineDefJsonNode.get(SOURCE_KEY),
+                "Missing required field \"%s\" in pipeline definition",
+                SOURCE_KEY));
 
         // Sink is required
-        SinkDef sinkDef =
-                toSinkDef(
-                        checkNotNull(
-                                pipelineDefJsonNode.get(SINK_KEY),
-                                "Missing required field \"%s\" in pipeline definition",
-                                SINK_KEY),
-                        schemaChangeBehavior);
+        SinkDef sinkDef = toSinkDef(
+                checkNotNull(
+                        pipelineDefJsonNode.get(SINK_KEY),
+                        "Missing required field \"%s\" in pipeline definition",
+                        SINK_KEY),
+                schemaChangeBehavior);
 
         // Transforms are optional
         List<TransformDef> transformDefs = new ArrayList<>();
         Optional.ofNullable(pipelineDefJsonNode.get(TRANSFORM_KEY))
-                .ifPresent(
-                        node ->
-                                node.forEach(
-                                        transform -> transformDefs.add(toTransformDef(transform))));
+                .ifPresent(node -> node.forEach(transform -> transformDefs.add(toTransformDef(transform))));
 
         // Routes are optional
         List<RouteDef> routeDefs = new ArrayList<>();
@@ -143,20 +133,15 @@ public class YamlTextPipelineDefinitionParser {
         pipelineConfig.addAll(globalPipelineConfig);
         pipelineConfig.addAll(userPipelineConfig);
 
-        return new PipelineDef(
-                sourceDef, sinkDef, routeDefs, transformDefs, udfDefs, pipelineConfig);
+        return new PipelineDef(sourceDef, sinkDef, routeDefs, transformDefs, udfDefs, pipelineConfig);
     }
 
     private SourceDef toSourceDef(JsonNode sourceNode) {
-        Map<String, String> sourceMap =
-                mapper.convertValue(sourceNode, new TypeReference<Map<String, String>>() {});
+        Map<String, String> sourceMap = mapper.convertValue(sourceNode, new TypeReference<Map<String, String>>() {});
 
         // "type" field is required
-        String type =
-                checkNotNull(
-                        sourceMap.remove(TYPE_KEY),
-                        "Missing required field \"%s\" in source configuration",
-                        TYPE_KEY);
+        String type = checkNotNull(
+                sourceMap.remove(TYPE_KEY), "Missing required field \"%s\" in source configuration", TYPE_KEY);
 
         // "name" field is optional
         String name = sourceMap.remove(NAME_KEY);
@@ -182,23 +167,18 @@ public class YamlTextPipelineDefinitionParser {
                     .forEach(includedSETypes::add);
         }
 
-        Set<SchemaChangeEventType> declaredSETypes =
-                resolveSchemaEvolutionOptions(includedSETypes, excludedSETypes);
+        Set<SchemaChangeEventType> declaredSETypes = resolveSchemaEvolutionOptions(includedSETypes, excludedSETypes);
 
         if (sinkNode instanceof ObjectNode) {
             ((ObjectNode) sinkNode).remove(INCLUDE_SCHEMA_EVOLUTION_TYPES);
             ((ObjectNode) sinkNode).remove(EXCLUDE_SCHEMA_EVOLUTION_TYPES);
         }
 
-        Map<String, String> sinkMap =
-                mapper.convertValue(sinkNode, new TypeReference<Map<String, String>>() {});
+        Map<String, String> sinkMap = mapper.convertValue(sinkNode, new TypeReference<Map<String, String>>() {});
 
         // "type" field is required
         String type =
-                checkNotNull(
-                        sinkMap.remove(TYPE_KEY),
-                        "Missing required field \"%s\" in sink configuration",
-                        TYPE_KEY);
+                checkNotNull(sinkMap.remove(TYPE_KEY), "Missing required field \"%s\" in sink configuration", TYPE_KEY);
 
         // "name" field is optional
         String name = sinkMap.remove(NAME_KEY);
@@ -207,90 +187,70 @@ public class YamlTextPipelineDefinitionParser {
     }
 
     private RouteDef toRouteDef(JsonNode routeNode) {
-        String sourceTable =
-                checkNotNull(
+        String sourceTable = checkNotNull(
                         routeNode.get(ROUTE_SOURCE_TABLE_KEY),
                         "Missing required field \"%s\" in route configuration",
                         ROUTE_SOURCE_TABLE_KEY)
-                        .asText();
-        String sinkTable =
-                checkNotNull(
+                .asText();
+        String sinkTable = checkNotNull(
                         routeNode.get(ROUTE_SINK_TABLE_KEY),
                         "Missing required field \"%s\" in route configuration",
                         ROUTE_SINK_TABLE_KEY)
-                        .asText();
-        String replaceSymbol =
-                Optional.ofNullable(routeNode.get(ROUTE_REPLACE_SYMBOL))
-                        .map(JsonNode::asText)
-                        .orElse(null);
-        String description =
-                Optional.ofNullable(routeNode.get(ROUTE_DESCRIPTION_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
+                .asText();
+        String replaceSymbol = Optional.ofNullable(routeNode.get(ROUTE_REPLACE_SYMBOL))
+                .map(JsonNode::asText)
+                .orElse(null);
+        String description = Optional.ofNullable(routeNode.get(ROUTE_DESCRIPTION_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
         return new RouteDef(sourceTable, sinkTable, replaceSymbol, description);
     }
 
     private UdfDef toUdfDef(JsonNode udfNode) {
-        String functionName =
-                checkNotNull(
+        String functionName = checkNotNull(
                         udfNode.get(UDF_FUNCTION_NAME_KEY),
                         "Missing required field \"%s\" in UDF configuration",
                         UDF_FUNCTION_NAME_KEY)
-                        .asText();
-        String classpath =
-                checkNotNull(
+                .asText();
+        String classpath = checkNotNull(
                         udfNode.get(UDF_CLASSPATH_KEY),
                         "Missing required field \"%s\" in UDF configuration",
                         UDF_CLASSPATH_KEY)
-                        .asText();
+                .asText();
 
         return new UdfDef(functionName, classpath);
     }
 
     private TransformDef toTransformDef(JsonNode transformNode) {
-        String sourceTable =
-                checkNotNull(
+        String sourceTable = checkNotNull(
                         transformNode.get(TRANSFORM_SOURCE_TABLE_KEY),
                         "Missing required field \"%s\" in transform configuration",
                         TRANSFORM_SOURCE_TABLE_KEY)
-                        .asText();
-        String projection =
-                Optional.ofNullable(transformNode.get(TRANSFORM_PROJECTION_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
+                .asText();
+        String projection = Optional.ofNullable(transformNode.get(TRANSFORM_PROJECTION_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
         // When the star is in the first place, a backslash needs to be added for escape.
         if (!StringUtils.isNullOrWhitespaceOnly(projection) && projection.contains("\\*")) {
             projection = projection.replace("\\*", "*");
         }
-        String filter =
-                Optional.ofNullable(transformNode.get(TRANSFORM_FILTER_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
-        String primaryKeys =
-                Optional.ofNullable(transformNode.get(TRANSFORM_PRIMARY_KEY_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
-        String partitionKeys =
-                Optional.ofNullable(transformNode.get(TRANSFORM_PARTITION_KEY_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
-        String tableOptions =
-                Optional.ofNullable(transformNode.get(TRANSFORM_TABLE_OPTION_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
-        String description =
-                Optional.ofNullable(transformNode.get(TRANSFORM_DESCRIPTION_KEY))
-                        .map(JsonNode::asText)
-                        .orElse(null);
+        String filter = Optional.ofNullable(transformNode.get(TRANSFORM_FILTER_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
+        String primaryKeys = Optional.ofNullable(transformNode.get(TRANSFORM_PRIMARY_KEY_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
+        String partitionKeys = Optional.ofNullable(transformNode.get(TRANSFORM_PARTITION_KEY_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
+        String tableOptions = Optional.ofNullable(transformNode.get(TRANSFORM_TABLE_OPTION_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
+        String description = Optional.ofNullable(transformNode.get(TRANSFORM_DESCRIPTION_KEY))
+                .map(JsonNode::asText)
+                .orElse(null);
 
-        return new TransformDef(
-                sourceTable,
-                projection,
-                filter,
-                primaryKeys,
-                partitionKeys,
-                tableOptions,
-                description);
+        return new TransformDef(sourceTable, projection, filter, primaryKeys, partitionKeys, tableOptions, description);
     }
 
     private Configuration toPipelineConfig(JsonNode pipelineConfigNode) {
@@ -298,8 +258,7 @@ public class YamlTextPipelineDefinitionParser {
             return new Configuration();
         }
         Map<String, String> pipelineConfigMap =
-                mapper.convertValue(
-                        pipelineConfigNode, new TypeReference<Map<String, String>>() {});
+                mapper.convertValue(pipelineConfigNode, new TypeReference<Map<String, String>>() {});
         return Configuration.fromMap(pipelineConfigMap);
     }
 }

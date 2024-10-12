@@ -39,7 +39,9 @@ public class FeiShuSenderTest {
 
     @Before
     public void initFeiShuConfig() {
-        feiShuConfig.put(FeiShuConstants.WEB_HOOK, "https://webhook.qimai.shop/webhook?token=fb71f0f7075180fde8f8a5ea2c9bab5062fa14ec");
+        feiShuConfig.put(
+                FeiShuConstants.WEB_HOOK,
+                "https://webhook.qimai.shop/webhook?token=fb71f0f7075180fde8f8a5ea2c9bab5062fa14ec");
         feiShuConfig.put(FeiShuConstants.KEYWORD, "告警");
         feiShuConfig.put(FeiShuConstants.AT_ALL, "");
         feiShuConfig.put(FeiShuConstants.AT_USERS, "");
@@ -56,9 +58,9 @@ public class FeiShuSenderTest {
         alertConfig.setParam(feiShuConfig);
         feiShuAlert.setConfig(alertConfig);
 
-        String content = "Job Name : test1111\n- Job Status : CANCELED\n- Alert Time : 2024-09-13 19:57:11\n- Start Time : 2024-09-13 19:56:51\n- End Time : 2024-09-13 19:57:09\nGo toTask Web\n";
-        AlertResult alertResult =
-                feiShuAlert.send(AlertBaseConstant.ALERT_TEMPLATE_TITLE, content);
+        String content =
+                "Job Name : test1111\n- Job Status : CANCELED\n- Alert Time : 2024-09-13 19:57:11\n- Start Time : 2024-09-13 19:56:51\n- End Time : 2024-09-13 19:57:09\nGo toTask Web\n";
+        AlertResult alertResult = feiShuAlert.send(AlertBaseConstant.ALERT_TEMPLATE_TITLE, content);
         Assert.assertEquals(true, alertResult.getSuccess());
     }
 }

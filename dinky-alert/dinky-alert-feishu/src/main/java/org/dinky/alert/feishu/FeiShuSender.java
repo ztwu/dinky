@@ -99,7 +99,7 @@ public final class FeiShuSender {
     public AlertResult send(String title, String content) {
         try {
             StringBuffer sb = new StringBuffer();
-            sb.append("- **报错类型 :** "+title).append("\n");
+            sb.append("- **报错类型 :** " + title).append("\n");
             String[] split = content.split("\\\\n");
             for (String item : split) {
                 sb.append(item).append("\n");

@@ -64,7 +64,10 @@ public class JobExecuteBuilder extends JobBuilder {
                     }
                 }
                 GatewayResult gatewayResult = null;
-                config.addGatewayConfig(executor.getSetConfig());
+
+                //config.addGatewayConfig(executor.getSetConfig());
+                //修复无法获取cdc任务的set参数设置
+                config.addGatewayConfig(executor.getCustomTableEnvironment().getConfig().getConfiguration());
                 config.getGatewayConfig().setSql(jobParam.getParsedSql());
 
                 if (runMode.isApplicationMode()) {

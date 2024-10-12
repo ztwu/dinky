@@ -1,2 +1,1 @@
-mvn clean package -DskipTests=true -P prod,jdk1.8,flink-single-version,aliyun,flink-1.18,web,npm-huawei -Dspotless.check.skip=true
-mvn clean package -DskipTests=true -P dev,jdk1.8,flink-single-version,aliyun,flink-1.18,web,npm-huawei
+mvn clean package -DskipTests=true -P prod,jdk1.8,flink-single-version,aliyun,flink-1.18,web -Dspotless.check.skip=true
