@@ -19,6 +19,8 @@
 
 package org.dinky.executor;
 
+import org.apache.flink.yarn.YarnConfigKeys;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.dinky.assertion.Asserts;
 import org.dinky.classloader.DinkyClassLoader;
 import org.dinky.context.CustomTableEnvironmentContext;
@@ -46,6 +48,7 @@ import org.apache.flink.table.api.TableConfig;
 import org.apache.flink.table.api.TableResult;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -160,6 +163,13 @@ public abstract class Executor {
 
         tableEnvironment = createCustomTableEnvironment(classLoader);
         CustomTableEnvironmentContext.set(tableEnvironment);
+
+        //设置执行用户
+        try {
+            setConfig.put(YarnConfigKeys.ENV_HADOOP_USER_NAME, UserGroupInformation.getCurrentUser().getUserName());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        };
 
         Configuration configuration = tableEnvironment.getConfig().getConfiguration();
         if (executorConfig.isValidJobName()) {
