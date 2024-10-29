@@ -164,14 +164,13 @@ public abstract class Executor {
         tableEnvironment = createCustomTableEnvironment(classLoader);
         CustomTableEnvironmentContext.set(tableEnvironment);
 
+        Configuration configuration = tableEnvironment.getConfig().getConfiguration();
         //设置执行用户
         try {
-            setConfig.put(YarnConfigKeys.ENV_HADOOP_USER_NAME, UserGroupInformation.getCurrentUser().getUserName());
+            configuration.setString(YarnConfigKeys.ENV_HADOOP_USER_NAME, UserGroupInformation.getCurrentUser().getUserName());
         } catch (IOException e) {
             throw new RuntimeException(e);
         };
-
-        Configuration configuration = tableEnvironment.getConfig().getConfiguration();
         if (executorConfig.isValidJobName()) {
             configuration.setString(PipelineOptions.NAME.key(), executorConfig.getJobName());
             setConfig.put(PipelineOptions.NAME.key(), executorConfig.getJobName());
