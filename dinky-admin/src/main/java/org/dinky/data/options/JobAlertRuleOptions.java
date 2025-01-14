@@ -41,6 +41,7 @@ public class JobAlertRuleOptions {
     public static final String FIELD_NAME_CLUSTER_TYPE = "clusterType";
     public static final String FIELD_NAME_CLUSTER_HOSTS = "clusterHost";
     public static final String FIELD_NAME_EXCEPTIONS_MSG = "errorMsg";
+    public static final String FIELD_NAME_EXCEPTIONS_MSG2 = "errorMsg2";
     public static final String FIELD_NAME_CHECKPOINT_COST_TIME = "checkpointCostTime";
     public static final String FIELD_NAME_CHECKPOINT_FAILED_COUNT = "checkpointFailedCount";
     public static final String FIELD_NAME_CHECKPOINT_COMPLETE_COUNT = "checkpointCompleteCount";

@@ -30,6 +30,7 @@ import org.dinky.context.SpringContextUtils;
 import org.dinky.daemon.pool.FlinkJobThreadPool;
 import org.dinky.data.dto.AlertRuleDTO;
 import org.dinky.data.dto.TaskDTO;
+import org.dinky.data.dto.TaskSubmitDto;
 import org.dinky.data.enums.JobLifeCycle;
 import org.dinky.data.enums.Status;
 import org.dinky.data.enums.TaskOwnerAlertStrategyEnum;
@@ -43,6 +44,8 @@ import org.dinky.data.model.ext.JobAlertData;
 import org.dinky.data.model.ext.JobInfoDetail;
 import org.dinky.data.model.rbac.User;
 import org.dinky.data.options.JobAlertRuleOptions;
+import org.dinky.data.result.Result;
+import org.dinky.job.JobResult;
 import org.dinky.service.AlertHistoryService;
 import org.dinky.service.TaskService;
 import org.dinky.service.UserService;
@@ -272,6 +275,34 @@ public class JobAlertHandler {
                                 alertInstance, jobInstanceId, alertGroup.getId(), alertRuleDTO.getName(), alertContent);
                     });
         }
+
+        //告警完成之后，尝试重启paimon-cdc的任务
+        String exceptionName = facts.get(JobAlertRuleOptions.FIELD_NAME_EXCEPTIONS_MSG2);
+        String exceptionType = alertRuleDTO.getName();
+        System.out.println("===================>>>==================");
+        System.out.println("exceptionName => "+exceptionName);
+        System.out.println("exceptionType => "+exceptionType);
+        if(exceptionType.contains("作业运行异常")
+                && exceptionName.contains("RestoreAndFailCommittableStateManager")
+                && exceptionName.contains("paimon")
+                && exceptionName.contains("By restarting the job we hope that writers can start writing based on these new commits")
+        ){
+            boolean isCancelSuccess = taskService.cancelTaskJob(taskService.getTaskInfoById(taskId), false, true);
+            if(isCancelSuccess) {
+                System.out.println("重新停止成功 => "+taskId);
+                JobResult jobResult =
+                        taskService.submitTask(TaskSubmitDto.builder().id(taskId).build());
+                if (jobResult.isSuccess()) {
+                    System.out.println("重新启动成功 => "+taskId);
+                } else {
+                    System.out.println("重新启动失败 => "+taskId);
+                }
+            }else {
+                System.out.println("重新停止失败 => "+taskId);
+            }
+            Thread.sleep(3*60*1000);
+        }
+        System.out.println("===================>>>==================");
     }
 
     /**

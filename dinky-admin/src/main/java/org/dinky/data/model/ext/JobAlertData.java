@@ -119,6 +119,9 @@ public class JobAlertData {
     @JsonProperty(value = JobAlertRuleOptions.FIELD_NAME_EXCEPTIONS_MSG)
     @Builder.Default
     private String errorMsg = "";
+    @JsonProperty(value = JobAlertRuleOptions.FIELD_NAME_EXCEPTIONS_MSG2)
+    @Builder.Default
+    private String errorMsg2 = "";
 
     @JsonProperty(value = JobAlertRuleOptions.FIELD_NAME_CHECKPOINT_COST_TIME)
     @Builder.Default
@@ -189,8 +192,13 @@ public class JobAlertData {
             // The error message is too long to send an alarm,
             // and only the first line of abnormal information is used
             String err = Optional.ofNullable(exceptions.getRootException())
-                    .orElse("dinky didn't get any ERROR!")
-                    .split("\n")[0];
+                    .orElse("dinky didn't get any ERROR!");
+
+            if (err.length() > 2000) {
+                builder.errorMsg2(err.substring(0, 2000));
+            }else{
+                builder.errorMsg2(err);
+            }
             if (err.length() > 100) {
                 err = err.substring(0, 100) + "...";
             }
