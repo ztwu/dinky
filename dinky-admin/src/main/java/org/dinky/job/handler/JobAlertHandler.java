@@ -301,7 +301,7 @@ public class JobAlertHandler {
 
             boolean isCancelSuccess = taskService.cancelTaskJob(taskService.getTaskInfoById(taskId), false, true);
             if(isCancelSuccess) {
-                System.out.println("【%s】【%s】重新停止成功 => "+taskId);
+                System.out.println(String.format("【%s】【%s】重新停止成功 => ", Thread.currentThread().getName(), taskId));
                 JobResult jobResult =
                         taskService.submitTask(TaskSubmitDto.builder().id(taskId).build());
                 if (jobResult.isSuccess()) {
