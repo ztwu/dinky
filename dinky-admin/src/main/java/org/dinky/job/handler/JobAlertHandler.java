@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -279,30 +280,40 @@ public class JobAlertHandler {
         //告警完成之后，尝试重启paimon-cdc的任务
         String exceptionName = facts.get(JobAlertRuleOptions.FIELD_NAME_EXCEPTIONS_MSG2);
         String exceptionType = alertRuleDTO.getName();
-        System.out.println("===================>>>==================");
-        System.out.println("exceptionName => "+exceptionName);
-        System.out.println("exceptionType => "+exceptionType);
+//        System.out.println("===================>>>==================");
+//        System.out.println("exceptionName => "+exceptionName);
+//        System.out.println("exceptionType => "+exceptionType);
         if(exceptionType.contains("作业运行异常")
                 && exceptionName.contains("RestoreAndFailCommittableStateManager")
                 && exceptionName.contains("paimon")
                 && exceptionName.contains("By restarting the job we hope that writers can start writing based on these new commits")
         ){
+            System.out.println(String.format("===【%s】【%s】随机单独执行一次 ==> start ", Thread.currentThread().getName(), taskId));
+            try {
+                Random random = new Random();
+                int num = random.nextInt(10)+1;
+                System.out.println(String.format("===【%s】【%s】随机单独执行一次需要等待时间 ==》%s ", Thread.currentThread().getName(), taskId, num * 30 * 1000));
+                Thread.sleep(num * 30 * 1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(String.format("===【%s】【%s】随机单独执行一次 ==> end ", Thread.currentThread().getName(), taskId));
+
             boolean isCancelSuccess = taskService.cancelTaskJob(taskService.getTaskInfoById(taskId), false, true);
             if(isCancelSuccess) {
-                System.out.println("重新停止成功 => "+taskId);
+                System.out.println("【%s】【%s】重新停止成功 => "+taskId);
                 JobResult jobResult =
                         taskService.submitTask(TaskSubmitDto.builder().id(taskId).build());
                 if (jobResult.isSuccess()) {
-                    System.out.println("重新启动成功 => "+taskId);
+                    System.out.println(String.format("【%s】【%s】重新启动成功 => ", Thread.currentThread().getName(), taskId));
                 } else {
-                    System.out.println("重新启动失败 => "+taskId);
+                    System.out.println(String.format("【%s】【%s】重新启动失败 => ", Thread.currentThread().getName(), taskId));
                 }
             }else {
-                System.out.println("重新停止失败 => "+taskId);
+                System.out.println(String.format("【%s】【%s】重新停止失败 => ", Thread.currentThread().getName(), taskId));
             }
-            Thread.sleep(3*60*1000);
         }
-        System.out.println("===================>>>==================");
+//        System.out.println("===================>>>==================");
     }
 
     /**
