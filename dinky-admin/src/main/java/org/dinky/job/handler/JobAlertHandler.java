@@ -291,9 +291,9 @@ public class JobAlertHandler {
             System.out.println(String.format("===【%s】【%s】随机单独执行一次 ==> start ", Thread.currentThread().getName(), taskId));
             try {
                 Random random = new Random();
-                int num = random.nextInt(10)+1;
+                int num = random.nextInt(20)+1;
                 System.out.println(String.format("===【%s】【%s】随机单独执行一次需要等待时间 ==》%s ", Thread.currentThread().getName(), taskId, num * 30 * 1000));
-                Thread.sleep(num * 30 * 1000);
+                Thread.sleep(num * 20 * 1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
