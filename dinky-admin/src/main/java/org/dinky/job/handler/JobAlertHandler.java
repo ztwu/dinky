@@ -280,9 +280,9 @@ public class JobAlertHandler {
         //告警完成之后，尝试重启paimon-cdc的任务
         String exceptionName = facts.get(JobAlertRuleOptions.FIELD_NAME_EXCEPTIONS_MSG2);
         String exceptionType = alertRuleDTO.getName();
-//        System.out.println("===================>>>==================");
-//        System.out.println("exceptionName => "+exceptionName);
-//        System.out.println("exceptionType => "+exceptionType);
+        System.out.println("===================>>>==================");
+        System.out.println("exceptionName => "+exceptionName);
+        System.out.println("exceptionType => "+exceptionType);
         if(exceptionType.contains("作业运行异常")
                 && exceptionName.contains("RestoreAndFailCommittableStateManager")
                 && exceptionName.contains("paimon")
@@ -291,9 +291,9 @@ public class JobAlertHandler {
             System.out.println(String.format("===【%s】【%s】随机单独执行一次 ==> start ", Thread.currentThread().getName(), taskId));
             try {
                 Random random = new Random();
-                int num = random.nextInt(20)+1;
+                int num = random.nextInt(100)*5;
                 System.out.println(String.format("===【%s】【%s】随机单独执行一次需要等待时间 ==》%s ", Thread.currentThread().getName(), taskId, num * 30 * 1000));
-                Thread.sleep(num * 20 * 1000);
+                Thread.sleep(num * 1000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -313,7 +313,7 @@ public class JobAlertHandler {
                 System.out.println(String.format("【%s】【%s】重新停止失败 => ", Thread.currentThread().getName(), taskId));
             }
         }
-//        System.out.println("===================>>>==================");
+        System.out.println("===================>>>==================");
     }
 
     /**
